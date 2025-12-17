@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>LoL Karakter Çarkı</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: white;
+      color: black;
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
+
+    .lanes {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 16px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 16px 24px;
+      border-radius: 24px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .lanes label {
+      cursor: pointer;
+      font-size: 16px;
+      color: black;
+      padding: 8px 16px;
+      border-radius: 16px;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .lanes label:hover {
+      background: rgba(0,0,0,0.1);
+      transform: scale(1.05);
+    }
+
+    #wheel {
+      width: 600px;
+      height: 800px;
+      overflow: hidden;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 40px rgba(0,0,0,0.2);
+      border-radius: 20px;
+      border: 8px solid gold;
+      z-index: 5;
+      background-color: #fff;
+    }
+
+    #image {
+      width: 100%;
+      height: 100%;
+      background-position: center;
+      background-size: contain;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      border-radius: 20px;
+    }
+
+    #image.effect {
+      animation: blink 1s ease-in-out forwards;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+
+    button {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 14px 36px;
+      font-size: 20px;
+      cursor: pointer;
+      background: #22c55e;
+      border: none;
+      border-radius: 14px;
+      z-index: 10;
+    }
+
+    #result {
+      position: fixed;
+      bottom: 90px;
+      width: 100%;
+      text-align: center;
+      font-size: 28px;
+      color: black;
+      z-index: 10;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="lanes">
+    <label><input type="checkbox" value="Top" checked> Top</label>
+    <label><input type="checkbox" value="Jungle" checked> Jungle</label>
+    <label><input type="checkbox" value="Mid" checked> Mid</label>
+    <label><input type="checkbox" value="ADC" checked> ADC</label>
+    <label><input type="checkbox" value="Support" checked> Support</label>
+  </div>
+
+  <div id="wheel">
+    <div id="image"></div>
+  </div>
+
+  <div id="result"></div>
+  <button id="spinBtn">Karakter Seç</button>
+
+  <script>
+    const champions = {
+      Top: ['Malphite','Darius','Garen','Fiora','Shen','Camille','Jax','Irelia','Riven','Renekton'],
+      Jungle: ['LeeSin','Khazix','Amumu','Evelynn','Warwick','Graves','Nidalee','Sejuani','Udyr','Warwick'],
+      Mid: ['Ahri','Zed','Lux','Orianna','Syndra','Yasuo','Viktor','Katarina','Anivia','Cassiopeia'],
+      ADC: ['Jinx','Caitlyn','Ezreal','MissFortune','Vayne','Ashe','Lucian','Draven','Kaisa','Sivir'],
+      Support: ['Thresh','Leona','Lulu','Nami','Braum','Janna','Morgana','Soraka','Alistar','Rakan']
+    };
+
+    let usedChampions = [];
+    let currentBg = null;
+
+    const imageDiv = document.getElementById('image');
+    const result = document.getElementById('result');
+    const spinBtn = document.getElementById('spinBtn');
+
+    function getSelectedLanes() {
+      return [...document.querySelectorAll('.lanes input:checked')].map(i => i.value);
+    }
+
+    function getPool() {
+      const pool = getSelectedLanes().flatMap(l => champions[l]);
+      return pool;
+    }
+
+    function setChampion(name) {
+      const splashMain = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${name}_0.jpg`;
+      const splashBg = `https://ddragon.leagueoflegends.com/cdn/img/champion/splash/${name}_1.jpg`;
+
+      imageDiv.style.backgroundImage = `url(${splashMain})`;
+
+      if (currentBg) {
+        currentBg.remove();
+      }
+      const bgDiv = document.createElement('div');
+      bgDiv.style.position = 'fixed';
+      bgDiv.style.top = '0';
+      bgDiv.style.left = '0';
+      bgDiv.style.width = '100%';
+      bgDiv.style.height = '100%';
+      bgDiv.style.backgroundImage = `url(${splashBg})`;
+      bgDiv.style.backgroundSize = 'cover';
+      bgDiv.style.backgroundPosition = 'center';
+      bgDiv.style.zIndex = '-1';
+      bgDiv.style.opacity = '0.6';
+      document.body.appendChild(bgDiv);
+      currentBg = bgDiv;
+
+      result.textContent = name;
+      imageDiv.classList.remove('effect');
+      void imageDiv.offsetWidth;
+      imageDiv.classList.add('effect');
+
+      usedChampions.push(name);
+    }
+
+    spinBtn.addEventListener('click', () => {
+      const pool = getPool();
+
+      let champ;
+      do {
+        champ = pool[Math.floor(Math.random() * pool.length)];
+      } while (usedChampions.includes(champ) && Math.random() > 0.1);
+
+      imageDiv.style.opacity = '0';
+      setTimeout(() => setChampion(champ), 50);
+    });
+  </script>
+</body>
+</html>
